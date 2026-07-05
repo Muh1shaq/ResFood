@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Redistribution Network - ResFood</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/donor.css">
+</head>
+<body>
+  
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Header Placeholder -->
+  <header id="global-header"></header>
+
+  <main>
+    <!-- Page Hero -->
+    <section class="donor-hero animate-slide-up">
+      <div style="background-color: var(--accent-light-bg); color: var(--accent); width:3.5rem; height:3.5rem; border-radius:1rem; display:flex; align-items:center; justify-content:center; margin: 0 auto 1.25rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart-handshake"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08v0c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79-.07l.02.02a1.86 1.86 0 0 0 2.6 0v0a1.72 1.72 0 0 0 0-2.46L17 5"/></svg>
+      </div>
+      <h1>Smart Redistribution Network</h1>
+      <p>Jembatan logistik sosial untuk memfasilitasi redistribusi makanan surplus skala besar dari industri kuliner dan ritel secara aman langsung kepada panti asuhan, kaum dhuafa, dan dapur umum.</p>
+    </section>
+
+    <!-- Main Donor Grid -->
+    <div class="donor-grid animate-slide-up" style="animation-delay: 0.1s;">
+      
+      <!-- Left Column: Active Urgent Food Requests -->
+      <div>
+        <div class="request-list-header">
+          <h2 style="font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem;">
+            🔥 Kebutuhan Pangan Mendesak
+          </h2>
+          <span class="badge badge-accent" id="active-donations-count">0 Lembaga</span>
+        </div>
+
+        <!-- Dynamic List of requests -->
+        <div id="donations-list-container">
+          <div style="text-align: center; color: var(--text-muted); padding: 4rem 0;">
+            Mengambil data donasi pangan...
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Add request / Volunteer -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Submit request form (For nonprofits) -->
+        <div class="glass-card">
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Ajukan Permintaan Pangan</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Khusus untuk lembaga sosial terverifikasi yang membutuhkan pasokan donasi makanan berlebih.</p>
+
+          <div id="request-form-alert" class="alert"></div>
+
+          <form id="add-donation-request-form">
+            <div class="form-group">
+              <label for="req-org">Nama Lembaga</label>
+              <input type="text" id="req-org" class="form-input" placeholder="cth. Panti Asuhan Kasih Bunda" required>
+            </div>
+
+            <div class="form-group">
+              <label for="req-title">Judul Kebutuhan</label>
+              <input type="text" id="req-title" class="form-input" placeholder="cth. Roti/Susu untuk Balita Panti" required>
+            </div>
+
+            <div class="form-group">
+              <label for="req-target">Target Jumlah Porsi</label>
+              <input type="number" id="req-target" class="form-input" placeholder="cth. 50" min="1" required>
+            </div>
+
+            <div class="form-group">
+              <label for="req-deadline">Batas Waktu Pengantaran</label>
+              <input type="text" id="req-deadline" class="form-input" placeholder="cth. Hari ini, 18:00 WIB" required>
+            </div>
+
+            <div class="form-group">
+              <label for="req-protocol">Protokol Keamanan Pangan</label>
+              <input type="text" id="req-protocol" class="form-input" placeholder="cth. Kemasan bersegel, suhu dingin < 4°C" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label for="req-desc">Deskripsi Kebutuhan Detail</label>
+              <textarea id="req-desc" class="form-input" rows="3" placeholder="Sebutkan spesifikasi logistik penerima, jenis pangan, dan kontak penanggung jawab..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-accent" style="width: 100%; padding: 0.8rem; font-weight:700;">Ajukan Permintaan &rarr;</button>
+          </form>
+        </div>
+
+        <!-- Volunteer Courier Sign Up Card -->
+        <div class="glass-card volunteer-card">
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color:var(--accent)">Menjadi Kurir Relawan</h3>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.5;">Bantu antarkan surplus makanan dari mitra kuliner ke lembaga penerima manfaat. Kami memerlukan bantuan roda dua/roda empat untuk mengamankan rantai pasok dingin.</p>
+          
+          <div id="volunteer-form-alert" class="alert"></div>
+
+          <form id="volunteer-signup-form">
+            <!-- Association dropdown -->
+            <div class="form-group">
+              <label for="vol-target-id">Pilih Program Distribusi</label>
+              <select id="vol-target-id" class="form-input" style="height: 2.7rem; padding: 0.5rem 0.75rem;" required>
+                <!-- JS populates this dynamically -->
+                <option value="">Pilih program di samping...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="vol-name">Nama Lengkap</label>
+              <input type="text" id="vol-name" class="form-input" placeholder="cth. Hendra Saputra" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label for="vol-phone">Nomor WhatsApp Aktif</label>
+              <input type="tel" id="vol-phone" class="form-input" placeholder="cth. 0812XXXXXXXX" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem; font-weight:700;">Daftar Jadi Kurir Pengantar &rarr;</button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Donate Food Dialog Modal -->
+  <div class="modal" id="donate-food-modal">
+    <div class="modal-content">
+      <button class="close-modal" id="close-donate-modal-btn">&times;</button>
+      
+      <h3 style="font-size:1.3rem; margin-bottom:0.5rem;">Salurkan Surplus Makanan</h3>
+      <p id="donate-modal-req-title" style="font-weight:700; color:var(--text-secondary); margin-bottom:1.5rem;">Kebutuhan Roti & Susu Balita</p>
+      
+      <div class="donate-modal-body">
+        <div class="form-group">
+          <label for="donator-name">Nama Donatur / Bisnis Kuliner</label>
+          <input type="text" id="donator-name" class="form-input" placeholder="cth. Bakery Aroma Indah" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="donate-qty">Jumlah Porsi Donasi</label>
+          <input type="number" id="donate-qty" class="form-input" placeholder="cth. 20" min="1" required>
+        </div>
+
+        <!-- Security protocol display -->
+        <div class="badge badge-info" style="width: 100%; justify-content:center; padding: 0.6rem; font-size:0.75rem; margin-bottom: 1.5rem;" id="donate-modal-protocol">
+          🛡️ Protokol: Kemasan dingin & tersegel.
+        </div>
+
+        <button class="btn btn-accent" id="confirm-donate-btn" style="width: 100%; padding: 0.85rem; font-size:0.95rem; font-weight:700;">Konfirmasi Salurkan Donasi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Placeholder -->
+  <footer id="global-footer"></footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/donor.js"></script>
+</body>
+</html>

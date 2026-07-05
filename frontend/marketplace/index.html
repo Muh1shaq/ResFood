@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketplace Surplus Makanan - ResFood</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/marketplace.css">
+  <style>
+    /* Custom SVG Food Map design */
+    .map-svg-wrapper {
+      width: 100%;
+      height: 400px;
+      position: relative;
+      background-color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    [data-theme="dark"] .map-svg-wrapper {
+      background-color: #0f172a;
+    }
+    .map-grid-line {
+      stroke: var(--border-card);
+      stroke-width: 1px;
+      stroke-dasharray: 4 4;
+    }
+    .map-pin-point {
+      cursor: pointer;
+      transition: transform 0.2s, filter 0.2s;
+    }
+    .map-pin-point:hover {
+      transform: scale(1.3);
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
+    }
+    .map-pin-label {
+      font-size: 8px;
+      font-weight: 700;
+      fill: var(--text-primary);
+      text-shadow: 1px 1px 1px var(--bg-card);
+      pointer-events: none;
+    }
+    .map-legend {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-card);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Header Placeholder -->
+  <header id="global-header"></header>
+
+  <main>
+    <!-- Marketplace Header -->
+    <div class="marketplace-header animate-slide-up">
+      <div>
+        <h1>Marketplace Surplus Makanan</h1>
+        <p>Bantu kurangi food waste! Nikmati makanan lezat berkualitas tinggi dengan diskon hingga 70%.</p>
+      </div>
+
+      <!-- View Switcher -->
+      <div class="view-switcher">
+        <button class="view-btn active" id="view-mode-list-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+          Daftar
+        </button>
+        <button class="view-btn" id="view-mode-map-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+          Peta Terdekat
+        </button>
+      </div>
+    </div>
+
+    <!-- Search and category filters -->
+    <div class="filter-search-container animate-slide-up" style="animation-delay: 0.1s;">
+      <!-- Search input -->
+      <div style="position: relative; display: flex; align-items: center;">
+        <input type="text" id="search-input" class="form-input" placeholder="Cari donat, ayam rames, resto terdekat..." style="width: 100%; padding-left: 2.5rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search" style="position: absolute; left: 0.85rem; color: var(--text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+      </div>
+
+      <!-- Categories -->
+      <div class="category-tags" id="category-pills-container">
+        <button class="category-pill active" data-cat="semua">Semua</button>
+        <button class="category-pill" data-cat="makanan berat">Makanan Berat</button>
+        <button class="category-pill" data-cat="roti & kue">Roti & Kue</button>
+        <button class="category-pill" data-cat="buah & sayur">Buah & Sayur</button>
+        <button class="category-pill" data-cat="minuman">Minuman</button>
+      </div>
+    </div>
+
+    <!-- Map View (HTML & SVG Native Interactive) -->
+    <div class="map-view-container" id="map-view-block">
+      <div class="map-svg-wrapper">
+        <svg id="jakarta-food-map" viewBox="0 0 800 400" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background Grid -->
+          <line x1="100" y1="0" x2="100" y2="400" class="map-grid-line" />
+          <line x1="200" y1="0" x2="200" y2="400" class="map-grid-line" />
+          <line x1="300" y1="0" x2="300" y2="400" class="map-grid-line" />
+          <line x1="400" y1="0" x2="400" y2="400" class="map-grid-line" />
+          <line x1="500" y1="0" x2="500" y2="400" class="map-grid-line" />
+          <line x1="600" y1="0" x2="600" y2="400" class="map-grid-line" />
+          <line x1="700" y1="0" x2="700" y2="400" class="map-grid-line" />
+          <line x1="0" y1="100" x2="800" y2="100" class="map-grid-line" />
+          <line x1="0" y1="200" x2="800" y2="200" class="map-grid-line" />
+          <line x1="0" y1="300" x2="800" y2="300" class="map-grid-line" />
+
+          <!-- Dynamic points will be added here by JS -->
+        </svg>
+
+        <div class="map-legend">
+          <div class="legend-item">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: var(--primary); display: inline-block;"></span>
+            <span>Surplus Makanan Tersedia</span>
+          </div>
+          <div class="legend-item">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: var(--accent); display: inline-block;"></span>
+            <span>Radius Terdekat (< 1km)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- List View Grid -->
+    <div class="marketplace-grid animate-slide-up" id="marketplace-list-block" style="animation-delay: 0.2s;">
+      <!-- JS dynamically populates this grid -->
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 5rem 0;">
+        Sedang memuat menu surplus makanan...
+      </div>
+    </div>
+  </main>
+
+  <!-- Claim Modal Dialog -->
+  <div class="modal" id="claim-modal">
+    <div class="modal-content">
+      <button class="close-modal" id="close-modal-btn">&times;</button>
+      
+      <!-- Normal screen state -->
+      <div id="claim-modal-normal">
+        <h3 id="claim-modal-title" style="margin-bottom: 0.5rem; font-size:1.3rem;">Klaim Makanan</h3>
+        <p id="claim-modal-resto" class="restaurant-name">Nama Toko</p>
+        
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;" id="claim-modal-desc">Deskripsi porsi makanan.</p>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-card); padding-bottom:1rem; margin-bottom:1rem;">
+          <span style="font-size: 0.85rem; font-weight:700; color:var(--text-secondary)">Harga per Porsi:</span>
+          <span id="claim-modal-price" style="font-weight:800; color:var(--primary); font-size: 1.1rem;">Rp 0</span>
+        </div>
+
+        <div class="qty-selector">
+          <button class="qty-btn" id="qty-minus">-</button>
+          <span class="qty-value" id="qty-val">1</span>
+          <button class="qty-btn" id="qty-plus">+</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <span style="font-size: 0.9rem; font-weight:800; color:var(--text-primary)">Total Pembayaran:</span>
+          <span id="claim-modal-total" style="font-weight:800; color:var(--primary); font-size: 1.25rem;">Rp 0</span>
+        </div>
+
+        <!-- Safety note -->
+        <div class="badge badge-info" style="width:100%; justify-content:center; padding:0.6rem; margin-bottom:1.5rem; font-size:0.75rem;">
+          🛡️ Keamanan Makanan: Lulus Uji Cek Kelayakan Penjualan
+        </div>
+
+        <button class="btn btn-primary" id="confirm-claim-btn" style="width:100%; padding:0.85rem; font-size:0.95rem;">Konfirmasi Pengambilan</button>
+      </div>
+
+      <!-- Success Screen State -->
+      <div id="claim-modal-success" style="display:none;" class="claim-success-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle" style="color:var(--primary); margin: 0 auto 1rem;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <h3 style="font-size:1.4rem; margin-bottom:0.5rem;">Klaim Makanan Berhasil!</h3>
+        <p style="font-size:0.85rem; color:var(--text-secondary)">Tunjukkan kode klaim berikut di kasir restoran untuk mengambil makanan Anda.</p>
+        
+        <div class="claim-success-code" id="success-pickup-code">RES-8821</div>
+        
+        <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-bottom:1.5rem;">Silakan lakukan pembayaran langsung di lokasi kasir sesuai total tagihan di atas.</p>
+        
+        <button class="btn btn-primary" id="finish-claim-btn" style="width:100%;">Tutup & Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Placeholder -->
+  <footer id="global-footer"></footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/marketplace.js"></script>
+</body>
+</html>
