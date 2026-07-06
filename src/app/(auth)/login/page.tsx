@@ -30,7 +30,7 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      await login(email, role);
+      await login(email, role, password);
       setSuccess(true);
       setTimeout(() => {
         window.location.href = role === "restaurant" || role === "foodbank" ? "/dashboard" : "/marketplace";

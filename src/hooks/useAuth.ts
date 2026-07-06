@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { User, UserRole } from "@/types";
+import { supabase } from "@/lib/supabaseClient";
 
 // Simulated user storage key
 const AUTH_KEY = "resfood_auth_user";
@@ -25,43 +26,86 @@ export function useAuth() {
     }
   }, []);
 
-  const login = async (email: string, role: UserRole) => {
+  const login = async (email: string, role: UserRole, password?: string) => {
     setIsLoading(true);
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const { data: userRow, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
 
-    const mockUser: User = {
-      id: Math.random().toString(36).substring(2, 9),
-      email,
-      name: email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1),
-      role,
-      phoneNumber: "+62 812-3456-7890",
-      createdAt: new Date().toISOString(),
-    };
+      if (error) throw error;
 
-    localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
-    setUser(mockUser);
-    setIsLoading(false);
-    return mockUser;
+      if (!userRow) {
+        throw new Error("Akun tidak ditemukan. Silakan registrasi terlebih dahulu.");
+      }
+
+      if (password && userRow.password !== password) {
+        throw new Error("Kata sandi salah.");
+      }
+
+      const mockUser: User = {
+        id: userRow.id.toString(),
+        email: userRow.email,
+        name: userRow.name,
+        role: userRow.role as UserRole,
+        phoneNumber: "+62 812-3456-7890",
+        createdAt: userRow.created_at || new Date().toISOString(),
+      };
+
+      localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
+      setUser(mockUser);
+      setIsLoading(false);
+      return mockUser;
+    } catch (err) {
+      setIsLoading(false);
+      throw err;
+    }
   };
 
-  const register = async (name: string, email: string, role: UserRole) => {
+  const register = async (name: string, email: string, role: UserRole, password?: string) => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      // Check if email already exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
 
-    const mockUser: User = {
-      id: Math.random().toString(36).substring(2, 9),
-      email,
-      name,
-      role,
-      phoneNumber: "+62 812-9876-5432",
-      createdAt: new Date().toISOString(),
-    };
+      if (checkError) throw checkError;
 
-    localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
-    setUser(mockUser);
-    setIsLoading(false);
-    return mockUser;
+      if (existingUser) {
+        throw new Error("Email sudah terdaftar.");
+      }
+
+      // Insert new user
+      const { data: newUserRow, error: insertError } = await supabase
+        .from("users")
+        .insert([{ name, email, role, password: password || "password123" }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      const mockUser: User = {
+        id: newUserRow.id.toString(),
+        email: newUserRow.email,
+        name: newUserRow.name,
+        role: newUserRow.role as UserRole,
+        phoneNumber: "+62 812-9876-5432",
+        createdAt: newUserRow.created_at || new Date().toISOString(),
+      };
+
+      localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
+      setUser(mockUser);
+      setIsLoading(false);
+      return mockUser;
+    } catch (err) {
+      setIsLoading(false);
+      throw err;
+    }
   };
 
   const logout = () => {

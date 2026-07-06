@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      await register(name, email, role);
+      await register(name, email, role, password);
       setSuccess(true);
       setTimeout(() => {
         window.location.href = role === "restaurant" || role === "foodbank" ? "/dashboard" : "/marketplace";
