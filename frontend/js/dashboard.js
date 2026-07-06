@@ -10,27 +10,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentPartner = null;
 
-  // Check auth
+  // Strict auth & role guard (enforceRoleAccess in app.js handles redirect,
+  // but we add a local guard here as a safety net in case app.js loads late)
   const cachedUser = localStorage.getItem('resfood_user');
-  if (cachedUser) {
-    const user = JSON.parse(cachedUser);
-    if (user.role === 'restaurant') {
-      currentPartner = user;
-      welcomeMsg.textContent = `Selamat datang kembali, ${user.name}! Kelola surplus makanan Anda secara real-time.`;
-      demoBanner.style.display = 'none';
-    } else {
-      // User is logged in but not a restaurant. Allow demo mode but advise
-      currentPartner = { id: '1', name: 'Bakery Aroma Indah', role: 'restaurant' };
-      demoBanner.style.display = 'flex';
-      demoBanner.querySelector('strong').textContent = `Perhatian: Peran Anda saat ini (${user.role}) bukan Mitra Restoran.`;
-      welcomeMsg.textContent = `Portal Mitra (Mode Simulasi - Bakery Aroma Indah)`;
-    }
-  } else {
-    // Guest. Activate demo mode
-    currentPartner = { id: '1', name: 'Bakery Aroma Indah', role: 'restaurant' };
-    demoBanner.style.display = 'flex';
-    welcomeMsg.textContent = `Portal Mitra (Mode Simulasi - Bakery Aroma Indah)`;
+  if (!cachedUser) {
+    window.location.href = '/';
+    return;
   }
+  const user = JSON.parse(cachedUser);
+  if (user.role !== 'restaurant') {
+    const ROLE_HOME = { nonprofit: '/donor/', public: '/marketplace/', courier: '/marketplace/' };
+    window.location.href = ROLE_HOME[user.role] || '/';
+    return;
+  }
+
+  currentPartner = user;
+  if (welcomeMsg) {
+    welcomeMsg.textContent = `Selamat datang kembali, ${user.name}! Kelola surplus makanan Anda secara real-time.`;
+  }
+  if (demoBanner) demoBanner.style.display = 'none';
 
   if (demoLoginBtn) {
     demoLoginBtn.addEventListener('click', () => {

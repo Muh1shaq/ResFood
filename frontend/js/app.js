@@ -25,38 +25,88 @@ function setSession(user) {
 function clearSession() {
   window.ResFood.user = null;
   localStorage.removeItem('resfood_user');
-  updateNavbarState();
-  // Redirect to home if on dashboard
-  if (window.location.pathname.includes('/dashboard')) {
-    window.location.href = '/';
+  window.location.href = '/';
+}
+
+// ============================================================
+// ROLE-BASED ACCESS CONTROL
+// Rules:
+//   - / (landing page)        → guests only, logged-in users redirected to their page
+//   - /marketplace/           → role: public, courier (masyarakat/UMKM)
+//   - /donor/                 → role: nonprofit (organisasi sosial)
+//   - /dashboard/             → role: restaurant (mitra bisnis kuliner)
+//   - /auth/login.html        → guests only
+//   - /auth/register.html     → guests only
+// ============================================================
+const ROLE_HOME = {
+  restaurant: '/dashboard/',
+  nonprofit:  '/donor/',
+  public:     '/marketplace/',
+  courier:    '/marketplace/'
+};
+
+function enforceRoleAccess() {
+  const path = window.location.pathname;
+  const user = window.ResFood.user;
+
+  const isAuthPage = path.includes('/auth/');
+  const isLanding  = path === '/' || path === '/index.html';
+  const isMarket   = path.startsWith('/marketplace');
+  const isDonor    = path.startsWith('/donor');
+  const isDash     = path.startsWith('/dashboard');
+
+  // --- Guest rules ---
+  if (!user) {
+    // Guests must not access protected pages
+    if (isMarket || isDonor || isDash) {
+      window.location.href = '/';
+    }
+    return;
+  }
+
+  // --- Logged-in rules ---
+  const role = user.role;
+  const home = ROLE_HOME[role] || '/';
+
+  // Logged-in users cannot visit the landing page or auth pages
+  if (isLanding || isAuthPage) {
+    window.location.href = home;
+    return;
+  }
+
+  // Marketplace: only public & courier
+  if (isMarket && role !== 'public' && role !== 'courier') {
+    window.location.href = home;
+    return;
+  }
+
+  // Donor/redistribution: only nonprofit
+  if (isDonor && role !== 'nonprofit') {
+    window.location.href = home;
+    return;
+  }
+
+  // Dashboard/mitra portal: only restaurant
+  if (isDash && role !== 'restaurant') {
+    window.location.href = home;
+    return;
   }
 }
 
-// Update Navbar to show user or login/register buttons
+// Update Navbar based on role — only shows links that the current user may access
 function updateNavbarState() {
   const actionsContainer = document.getElementById('nav-actions-container');
   if (!actionsContainer) return;
 
   const user = window.ResFood.user;
-  
-  if (user) {
-    let dashboardLink = '';
-    if (user.role === 'restaurant') {
-      dashboardLink = `<a href="/dashboard" class="nav-link">Dasbor</a>`;
-    } else if (user.role === 'nonprofit') {
-      dashboardLink = `<a href="/donor" class="nav-link">Sistem Donasi</a>`;
-    } else {
-      dashboardLink = `<a href="/marketplace" class="nav-link">Marketplace</a>`;
-    }
 
+  if (user) {
     actionsContainer.innerHTML = `
       <div style="display:flex; align-items:center; gap:0.75rem;">
         <span style="font-size:0.85rem; font-weight:700; color:var(--text-secondary)">👋 ${user.name}</span>
         <button id="logout-btn" class="btn btn-outline" style="padding:0.5rem 1rem; font-size:0.8rem;">Keluar</button>
       </div>
     `;
-    
-    // Add event listener to logout
     document.getElementById('logout-btn').addEventListener('click', clearSession);
   } else {
     actionsContainer.innerHTML = `
@@ -109,16 +159,32 @@ function initMobileMenu() {
   }
 }
 
+// Build nav links based on the current user's role
+function buildNavLinks() {
+  const user = window.ResFood.user;
+  const path = window.location.pathname;
+
+  if (!user) {
+    // Guest: only show Beranda link
+    return `<li><a href="/" class="nav-link ${path === '/' || path === '/index.html' ? 'active' : ''}">Beranda</a></li>`;
+  }
+
+  const role = user.role;
+  if (role === 'restaurant') {
+    return `<li><a href="/dashboard/" class="nav-link ${path.startsWith('/dashboard') ? 'active' : ''}">Mitra Portal</a></li>`;
+  } else if (role === 'nonprofit') {
+    return `<li><a href="/donor/" class="nav-link ${path.startsWith('/donor') ? 'active' : ''}">Redistribusi Donasi</a></li>`;
+  } else {
+    // public & courier
+    return `<li><a href="/marketplace/" class="nav-link ${path.startsWith('/marketplace') ? 'active' : ''}">Marketplace</a></li>`;
+  }
+}
+
 // Load navigation HTML dynamically or render it to ensure consistent navbar/footer
 function renderLayoutShell() {
   // Let's check if the navbar exists, if not we build it inside the header placeholder
   const headerPlaceholder = document.getElementById('global-header');
   if (headerPlaceholder) {
-    const isDashboard = window.location.pathname.includes('/dashboard/');
-    const isMarketplace = window.location.pathname.includes('/marketplace/');
-    const isDonor = window.location.pathname.includes('/donor/');
-    const isHome = !isDashboard && !isMarketplace && !isDonor && window.location.pathname.endsWith('/');
-
     headerPlaceholder.innerHTML = `
       <div class="nav-container">
         <a href="/" class="logo">
@@ -127,10 +193,7 @@ function renderLayoutShell() {
         </a>
         <button class="menu-toggle" id="menu-toggle">☰</button>
         <ul class="nav-menu" id="nav-menu">
-          <li><a href="/" class="nav-link ${isHome ? 'active' : ''}">Beranda</a></li>
-          <li><a href="/marketplace/" class="nav-link ${isMarketplace ? 'active' : ''}">Marketplace</a></li>
-          <li><a href="/donor/" class="nav-link ${isDonor ? 'active' : ''}">Redistribusi Donasi</a></li>
-          <li><a href="/dashboard/" class="nav-link ${isDashboard ? 'active' : ''}">Mitra Portal</a></li>
+          ${buildNavLinks()}
         </ul>
         <div class="nav-actions">
           <button class="theme-btn" id="theme-toggle" title="Toggle Tema"></button>
@@ -187,6 +250,7 @@ function renderLayoutShell() {
 // Initializing hooks
 document.addEventListener('DOMContentLoaded', () => {
   checkSession();
+  enforceRoleAccess(); // Must run before rendering — redirects happen here
   renderLayoutShell();
   initTheme();
   initMobileMenu();

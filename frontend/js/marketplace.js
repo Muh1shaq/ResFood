@@ -44,6 +44,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }).format(val);
   }
 
+  // Strict auth & role guard
+  const _cachedUser = localStorage.getItem('resfood_user');
+  if (!_cachedUser) {
+    window.location.href = '/';
+    return;
+  }
+  const _user = JSON.parse(_cachedUser);
+  if (_user.role !== 'public' && _user.role !== 'courier') {
+    const ROLE_HOME = { restaurant: '/dashboard/', nonprofit: '/donor/' };
+    window.location.href = ROLE_HOME[_user.role] || '/';
+    return;
+  }
+
   // Fetch foods
   async function fetchFoods() {
     try {

@@ -21,6 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let requests = [];
   let selectedReq = null;
 
+  // Strict auth & role guard
+  const _cachedUser = localStorage.getItem('resfood_user');
+  if (!_cachedUser) {
+    window.location.href = '/';
+    return;
+  }
+  const _user = JSON.parse(_cachedUser);
+  if (_user.role !== 'nonprofit') {
+    const ROLE_HOME = { restaurant: '/dashboard/', public: '/marketplace/', courier: '/marketplace/' };
+    window.location.href = ROLE_HOME[_user.role] || '/';
+    return;
+  }
+
   // Fetch all requests
   async function fetchRequests() {
     try {
