@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
+// Helper: generate sequential log ID safely
+function generateLogId(logArray) {
+  return `LOG-${String(logArray.length + 1).padStart(3, '0')}`;
+}
+
 // Get all surplus foods
 router.get('/', (req, res) => {
   res.json(req.db.foods);
@@ -11,20 +16,54 @@ router.post('/', (req, res) => {
   const { title, category, price, originalPrice, quantity, expiryTime, restaurantId, restaurantName } = req.body;
   const db = req.db;
 
+  // Required field validation
   if (!title || !price || !quantity || !restaurantId) {
-    return res.status(400).json({ success: false, message: 'Nama makanan, harga, dan jumlah wajib diisi' });
+    return res.status(400).json({ success: false, message: 'Nama makanan, harga, dan jumlah porsi wajib diisi' });
+  }
+
+  // Title validation
+  if (title.trim().length < 3) {
+    return res.status(400).json({ success: false, message: 'Nama makanan minimal 3 karakter' });
+  }
+
+  const discountPrice = Number(price);
+  const origPrice = Number(originalPrice) || discountPrice * 2;
+  const qty = Number(quantity);
+
+  // Price validation
+  if (isNaN(discountPrice) || discountPrice <= 0) {
+    return res.status(400).json({ success: false, message: 'Harga diskon harus berupa angka positif' });
+  }
+
+  // Original price validation
+  if (isNaN(origPrice) || origPrice <= 0) {
+    return res.status(400).json({ success: false, message: 'Harga asli harus berupa angka positif' });
+  }
+
+  // Ensure discount price is lower than original price
+  if (discountPrice >= origPrice) {
+    return res.status(400).json({ success: false, message: 'Harga diskon harus lebih rendah dari harga asli' });
+  }
+
+  // Quantity validation
+  if (isNaN(qty) || qty <= 0 || !Number.isInteger(qty)) {
+    return res.status(400).json({ success: false, message: 'Jumlah porsi harus berupa bilangan bulat positif' });
+  }
+
+  if (qty > 1000) {
+    return res.status(400).json({ success: false, message: 'Jumlah porsi tidak boleh lebih dari 1000' });
   }
 
   // Auto-generate some properties
   const newFood = {
-    id: (db.foods.length + 1).toString(),
+    id: Date.now().toString(),
     restaurantId,
     restaurantName: restaurantName || "Mitra Restoran",
-    title,
+    title: title.trim(),
     description: req.body.description || `Surplus makanan segar kategori ${category} dari kami. Dijamin aman dan lezat.`,
-    originalPrice: Number(originalPrice) || Number(price) * 2,
-    discountPrice: Number(price),
-    quantity: Number(quantity),
+    originalPrice: origPrice,
+    discountPrice,
+    quantity: qty,
     expiryTime: expiryTime || "Hari ini, 21:00 WIB",
     imageUrl: req.body.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80",
     category: category || "makanan berat",
@@ -41,12 +80,12 @@ router.post('/', (req, res) => {
 
   // Update Core Infrastructure Metrics (carbon reduced, etc.)
   // Saving 1 portion roughly reduces 2.5 kg of CO2, and adds value back
-  db.impact.co2ReducedKg += Math.round(Number(quantity) * 2.5);
-  db.impact.totalRescuedKg += Math.round(Number(quantity) * 0.5); // assuming 0.5kg per portion
+  db.impact.co2ReducedKg += Math.round(qty * 2.5);
+  db.impact.totalRescuedKg += Math.round(qty * 0.5); // assuming 0.5kg per portion
 
   // Add audit log
   db.impact.safetyAuditLog.unshift({
-    id: `LOG-00${db.impact.safetyAuditLog.length + 1}`,
+    id: generateLogId(db.impact.safetyAuditLog),
     timestamp: new Date().toISOString(),
     partner: newFood.restaurantName,
     action: `Makanan baru '${newFood.title}' ditambahkan dengan status safety: ${newFood.safetyStatus}`,
@@ -80,16 +119,22 @@ router.post('/claim', (req, res) => {
     return res.status(400).json({ success: false, message: 'ID Makanan, jumlah porsi, dan ID Pengguna wajib diisi' });
   }
 
+  const claimQty = Number(quantity);
+
+  // Validate claim quantity
+  if (isNaN(claimQty) || claimQty <= 0 || !Number.isInteger(claimQty)) {
+    return res.status(400).json({ success: false, message: 'Jumlah klaim harus berupa bilangan bulat positif' });
+  }
+
   const foodIndex = db.foods.findIndex(f => f.id === foodId);
   if (foodIndex === -1) {
-    return res.status(404).json({ success: false, message: 'Makanan surplus tidak ditemukan' });
+    return res.status(404).json({ success: false, message: 'Makanan surplus tidak ditemukan atau sudah habis' });
   }
 
   const foodItem = db.foods[foodIndex];
-  const claimQty = Number(quantity);
 
   if (foodItem.quantity < claimQty) {
-    return res.status(400).json({ success: false, message: `Stok tidak mencukupi (Tersisa: ${foodItem.quantity} porsi)` });
+    return res.status(400).json({ success: false, message: `Stok tidak mencukupi. Tersisa: ${foodItem.quantity} porsi` });
   }
 
   // Update quantity or remove if sold out
@@ -98,7 +143,7 @@ router.post('/claim', (req, res) => {
   const claimCode = `RES-${Math.floor(1000 + Math.random() * 9000)}`;
 
   const newClaim = {
-    id: (db.claims.length + 1).toString(),
+    id: Date.now().toString(),
     foodId,
     foodTitle: foodItem.title,
     restaurantName: foodItem.restaurantName,
@@ -118,14 +163,14 @@ router.post('/claim', (req, res) => {
 
   // Add audit log
   db.impact.safetyAuditLog.unshift({
-    id: `LOG-00${db.impact.safetyAuditLog.length + 1}`,
+    id: generateLogId(db.impact.safetyAuditLog),
     timestamp: new Date().toISOString(),
     partner: foodItem.restaurantName,
     action: `${userName || "Masyarakat"} mengklaim ${claimQty} porsi '${foodItem.title}' (Kode: ${claimCode})`,
     type: "Claim & Transfer"
   });
 
-  // If sold out, we can keep it or filter it out. Let's keep it if quantity > 0, otherwise we keep in listing but quantity is 0
+  // If sold out, remove from listing
   if (foodItem.quantity === 0) {
     db.foods.splice(foodIndex, 1);
   }

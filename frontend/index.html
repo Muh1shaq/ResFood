@@ -261,7 +261,8 @@
       <p class="sub">Hubungkan bisnis kuliner, swalayan, non-profit, dan konsumen umum secara real-time. Beli makanan surplus berkualitas dengan harga murah atau donasikan untuk redistribusi bantuan pangan.</p>
       
       <div class="hero-actions">
-        <a href="/marketplace/" class="btn btn-primary btn-lg">Jelajahi Makanan Surplus</a>
+        <!-- Hero buttons: href adjusted dynamically by script below based on auth state -->
+        <a href="/auth/register.html" class="btn btn-primary btn-lg" id="hero-cta-marketplace">Jelajahi Makanan Surplus</a>
         <a href="/auth/register.html?role=restaurant" class="btn btn-outline btn-lg">Daftar sebagai Mitra Restoran</a>
       </div>
 
@@ -379,6 +380,24 @@
   <footer id="global-footer"></footer>
 
   <script src="/js/app.js"></script>
+  <script>
+    // Adjust hero CTA button based on auth state
+    // This runs after app.js has initialized the session
+    document.addEventListener('DOMContentLoaded', () => {
+      const heroCta = document.getElementById('hero-cta-marketplace');
+      if (heroCta) {
+        const user = window.ResFood ? window.ResFood.user : null;
+        if (user) {
+          // Logged-in user: go to their home page
+          const roleHome = { restaurant: '/dashboard/', nonprofit: '/donor/', public: '/marketplace/', courier: '/marketplace/' };
+          heroCta.href = roleHome[user.role] || '/marketplace/';
+        } else {
+          // Guest: go to register so they can sign up and access marketplace
+          heroCta.href = '/auth/register.html';
+        }
+      }
+    });
+  </script>
   <script>
     // Fetch and render impact analytics and live audit logs from backend
     async function loadImpactData() {

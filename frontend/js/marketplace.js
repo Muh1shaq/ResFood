@@ -200,7 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Open Claim Modal
   function openClaimModal(foodId) {
-    selectedFood = foods.find(f => f.id === foodId);
+    // Use String() comparison to be safe regardless of ID type
+    selectedFood = foods.find(f => String(f.id) === String(foodId));
     if (!selectedFood) return;
 
     currentQty = 1;
@@ -229,6 +230,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+
+  // Close modal when clicking on the overlay (outside modal content)
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
   if (finishClaimBtn) finishClaimBtn.addEventListener('click', () => {
     closeModal();
     fetchFoods(); // Reload listings to update quantities
@@ -261,21 +270,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!selectedFood) return;
 
       // Get logged-in user
-      let userId = '3'; // Default guest public user
+      let userId = null;
       let userName = 'Masyarakat';
       const cachedUser = localStorage.getItem('resfood_user');
       if (cachedUser) {
         const user = JSON.parse(cachedUser);
-        userId = user.id;
+        userId = String(user.id);
         userName = user.name;
       }
+
+      if (!userId) {
+        alert('Anda harus masuk terlebih dahulu untuk mengklaim makanan.');
+        closeModal();
+        window.location.href = '/auth/login.html';
+        return;
+      }
+
+      confirmClaimBtn.disabled = true;
+      confirmClaimBtn.textContent = 'Memproses...';
 
       try {
         const response = await fetch('/api/foods/claim', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            foodId: selectedFood.id,
+            foodId: String(selectedFood.id),
             quantity: currentQty,
             userId,
             userName
@@ -291,10 +310,14 @@ document.addEventListener('DOMContentLoaded', () => {
           modalSuccess.style.display = 'block';
         } else {
           alert(data.message || 'Klaim makanan surplus gagal.');
+          confirmClaimBtn.disabled = false;
+          confirmClaimBtn.textContent = 'Konfirmasi Pengambilan';
         }
       } catch (err) {
         console.error(err);
         alert('Koneksi terputus ke server backend. Gagal memvalidasi klaim.');
+        confirmClaimBtn.disabled = false;
+        confirmClaimBtn.textContent = 'Konfirmasi Pengambilan';
       }
     });
   }

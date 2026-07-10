@@ -115,24 +115,28 @@
             </div>
             <div class="form-group">
               <label for="food-qty">Jumlah Porsi</label>
-              <input type="number" id="food-qty" class="form-input" placeholder="5" min="1" required>
+              <input type="number" id="food-qty" class="form-input" placeholder="5" min="1" max="1000" required>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Maks. 1000 porsi</span>
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
             <div class="form-group">
               <label for="food-original-price">Harga Asli (Rp)</label>
-              <input type="number" id="food-original-price" class="form-input" placeholder="60000">
+              <input type="number" id="food-original-price" class="form-input" placeholder="60000" min="1">
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Opsional, otomatis 2× harga diskon</span>
             </div>
             <div class="form-group">
-              <label for="food-price">Harga Diskon (Rp)</label>
-              <input type="number" id="food-price" class="form-input" placeholder="20000" required>
+              <label for="food-price">Harga Diskon (Rp) <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="food-price" class="form-input" placeholder="20000" min="1" required>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Harus lebih rendah dari harga asli</span>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="food-expiry">Batas Waktu Pengambilan</label>
-            <input type="text" id="food-expiry" class="form-input" placeholder="cth. Hari ini, 21:00 WIB" required>
+            <label for="food-expiry">Batas Waktu Pengambilan <span style="color:var(--danger)">*</span></label>
+            <input type="datetime-local" id="food-expiry" class="form-input" required>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Pilih tanggal & jam kedaluwarsa</span>
           </div>
 
           <div class="form-group" style="margin-bottom: 1.5rem;">

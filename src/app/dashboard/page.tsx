@@ -46,18 +46,43 @@ export default function DashboardPage() {
   const [originalPrice, setOriginalPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [expiry, setExpiry] = useState("");
+  const [error, setError] = useState("");
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !price || !quantity) return;
+    setError("");
+    
+    if (!title || !price || !quantity) {
+      setError("Mohon lengkapi semua field yang wajib diisi.");
+      return;
+    }
+
+    const numPrice = Number(price);
+    const numQuantity = Number(quantity);
+    const numOriginalPrice = Number(originalPrice) || numPrice * 2;
+
+    if (numQuantity <= 0) {
+      setError("Jumlah porsi harus lebih dari 0.");
+      return;
+    }
+
+    if (numPrice < 0 || numOriginalPrice < 0) {
+      setError("Harga tidak boleh bernilai negatif.");
+      return;
+    }
+
+    if (numOriginalPrice < numPrice) {
+      setError("Harga asli tidak boleh lebih rendah dari harga diskon.");
+      return;
+    }
 
     const newItem: MockListing = {
       id: Math.random().toString(),
       title,
       category,
-      price: Number(price),
-      originalPrice: Number(originalPrice) || Number(price) * 2,
-      quantity: Number(quantity),
+      price: numPrice,
+      originalPrice: numOriginalPrice,
+      quantity: numQuantity,
       expiry: expiry || "Hari ini, 20:00 WIB",
     };
 
@@ -179,6 +204,7 @@ export default function DashboardPage() {
                     <Input
                       type="number"
                       placeholder="5"
+                      min="1"
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
                       required
@@ -192,6 +218,7 @@ export default function DashboardPage() {
                     <Input
                       type="number"
                       placeholder="50000"
+                      min="0"
                       value={originalPrice}
                       onChange={(e) => setOriginalPrice(e.target.value)}
                     />
@@ -202,6 +229,7 @@ export default function DashboardPage() {
                     <Input
                       type="number"
                       placeholder="15000"
+                      min="0"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       required
@@ -217,6 +245,13 @@ export default function DashboardPage() {
                     onChange={(e) => setExpiry(e.target.value)}
                   />
                 </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 p-3 text-sm rounded-xl bg-rose-50 dark:bg-rose-950/20 text-rose-500 border border-rose-100 dark:border-rose-900/30">
+                    <ShieldCheck className="w-4 h-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
                 <Button type="submit" className="w-full mt-4 flex items-center justify-center gap-2">
                   <Plus className="w-4 h-4" /> Publikasikan Makanan

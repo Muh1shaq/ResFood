@@ -205,6 +205,26 @@ function renderLayoutShell() {
 
   const footerPlaceholder = document.getElementById('global-footer');
   if (footerPlaceholder) {
+    const user = window.ResFood.user;
+    const role = user ? user.role : null;
+
+    // Build role-aware platform links — only show links the user can actually access
+    let platformLinks = '';
+    if (!role) {
+      // Guest: only show register/login links in footer
+      platformLinks = `
+        <li><a href="/auth/register.html">Daftar Akun</a></li>
+        <li><a href="/auth/login.html">Masuk</a></li>
+      `;
+    } else if (role === 'restaurant') {
+      platformLinks = `<li><a href="/dashboard/">Portal Mitra Bisnis</a></li>`;
+    } else if (role === 'nonprofit') {
+      platformLinks = `<li><a href="/donor/">Redistribution Network</a></li>`;
+    } else {
+      // public & courier
+      platformLinks = `<li><a href="/marketplace/">Surplus Marketplace</a></li>`;
+    }
+
     footerPlaceholder.innerHTML = `
       <div class="footer-container">
         <div class="footer-brand">
@@ -217,9 +237,7 @@ function renderLayoutShell() {
         <div class="footer-links">
           <h4>Platform</h4>
           <ul>
-            <li><a href="/marketplace/">Surplus Marketplace</a></li>
-            <li><a href="/donor/">Redistribution Network</a></li>
-            <li><a href="/dashboard/">Portal Mitra Bisnis</a></li>
+            ${platformLinks}
           </ul>
         </div>
         <div class="footer-links">

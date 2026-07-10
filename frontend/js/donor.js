@@ -57,16 +57,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!programDropdown) return;
     const activeRequests = requests.filter(r => r.status === 'Berlangsung');
     
-    let optionsHtml = '<option value="">Pilih program di samping...</option>';
-    optionsHtml += activeRequests.map(r => {
-      return `<option value="${r.id}">${r.name} - ${r.title}</option>`;
-    }).join('');
+    let optionsHtml = '<option value="">— Pilih program distribusi —</option>';
+    if (activeRequests.length === 0) {
+      optionsHtml += '<option value="" disabled>Tidak ada program aktif saat ini</option>';
+    } else {
+      optionsHtml += activeRequests.map(r => {
+        return `<option value="${r.id}">${r.name} — ${r.title}</option>`;
+      }).join('');
+    }
 
     programDropdown.innerHTML = optionsHtml;
   }
 
   // Render Requests to DOM
   function renderRequests() {
+    if (!countBadge) return;
     countBadge.textContent = `${requests.length} Lembaga`;
     if (requests.length === 0) {
       donationsList.innerHTML = `
@@ -80,8 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
     donationsList.innerHTML = requests.map(req => {
       const pct = Math.min(100, Math.floor((req.current / req.target) * 100));
       const statusBadge = req.status === 'Selesai' 
-        ? `<span class="badge badge-primary">Selesai</span>` 
-        : `<span class="badge badge-accent">Berlangsung</span>`;
+        ? `<span class="badge badge-primary">✓ Selesai</span>` 
+        : `<span class="badge badge-accent">🔥 Berlangsung</span>`;
 
       return `
         <div class="glass-card request-card animate-slide-up" style="border-left-color: ${req.status === 'Selesai' ? 'var(--primary)' : 'var(--accent)'}">
@@ -171,18 +176,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (closeDonateBtn) closeDonateBtn.addEventListener('click', closeDonateModal);
 
+  // Close modal on overlay click
+  if (donateModal) {
+    donateModal.addEventListener('click', (e) => {
+      if (e.target === donateModal) closeDonateModal();
+    });
+  }
+
   // Submit Donation Contribution
   if (confirmDonateBtn) {
     confirmDonateBtn.addEventListener('click', async () => {
       if (!selectedReq) return;
 
       const contributorName = donatorNameInput.value.trim() || 'Donatur Anonim';
-      const quantity = donateQtyInput.value;
+      const quantityRaw = donateQtyInput.value;
+      const quantity = Number(quantityRaw);
 
-      if (!quantity || quantity <= 0) {
-        alert('Silakan masukkan jumlah porsi donasi yang valid.');
+      // Client-side validation
+      if (!quantityRaw || isNaN(quantity) || quantity <= 0 || !Number.isInteger(quantity)) {
+        alert('Jumlah porsi donasi harus berupa bilangan bulat positif (misal: 10).');
         return;
       }
+
+      if (quantity > selectedReq.target - selectedReq.current) {
+        const remaining = selectedReq.target - selectedReq.current;
+        alert(`Jumlah donasi melebihi kebutuhan tersisa. Maksimum yang masih dibutuhkan: ${remaining} porsi.`);
+        return;
+      }
+
+      confirmDonateBtn.disabled = true;
+      confirmDonateBtn.textContent = 'Memproses...';
 
       try {
         const response = await fetch(`/api/donations/${selectedReq.id}/donate`, {
@@ -194,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          alert('Terima kasih atas kontribusi donasi Anda! Koordinasikan pengiriman bersama kurir relawan kami.');
+          alert(`✅ Terima kasih atas kontribusi ${quantity} porsi dari ${contributorName}! Koordinasikan pengiriman bersama kurir relawan kami.`);
           closeDonateModal();
           fetchRequests();
         } else {
@@ -203,6 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error(err);
         alert('Koneksi terputus ke server backend.');
+      } finally {
+        confirmDonateBtn.disabled = false;
+        confirmDonateBtn.textContent = 'Konfirmasi Salurkan Donasi';
       }
     });
   }
@@ -214,12 +240,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const name = document.getElementById('req-org').value.trim();
       const title = document.getElementById('req-title').value.trim();
-      const target = document.getElementById('req-target').value;
-      const deadline = document.getElementById('req-deadline').value.trim();
+      const targetRaw = document.getElementById('req-target').value;
+      const deadlineRaw = document.getElementById('req-deadline').value;
       const safetyProtocol = document.getElementById('req-protocol').value.trim();
       const description = document.getElementById('req-desc').value.trim();
 
+      // Convert deadline datetime-local to readable Indonesian format
+      let deadline = deadlineRaw;
+      if (deadlineRaw) {
+        const deadlineDate = new Date(deadlineRaw);
+        deadline = deadlineDate.toLocaleString('id-ID', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+        });
+      }
+
       showAlert(formAlert, '', 'none');
+
+      // Client-side validation
+      if (!name) {
+        showAlert(formAlert, 'Nama lembaga wajib diisi.', 'danger');
+        return;
+      }
+
+      if (name.length < 3) {
+        showAlert(formAlert, 'Nama lembaga minimal 3 karakter.', 'danger');
+        return;
+      }
+
+      if (!title) {
+        showAlert(formAlert, 'Judul kebutuhan pangan wajib diisi.', 'danger');
+        return;
+      }
+
+      if (title.length < 5) {
+        showAlert(formAlert, 'Judul kebutuhan minimal 5 karakter.', 'danger');
+        return;
+      }
+
+      const target = Number(targetRaw);
+      if (!targetRaw || isNaN(target) || target <= 0 || !Number.isInteger(target)) {
+        showAlert(formAlert, 'Target jumlah porsi harus berupa bilangan bulat positif (misal: 50).', 'danger');
+        return;
+      }
+
+      if (!deadlineRaw) {
+        showAlert(formAlert, 'Batas waktu pengantaran wajib diisi.', 'danger');
+        return;
+      }
+
+      // Deadline must be in the future
+      if (new Date(deadlineRaw) <= new Date()) {
+        showAlert(formAlert, 'Batas waktu pengantaran harus di masa mendatang.', 'danger');
+        return;
+      }
+
+      if (!safetyProtocol) {
+        showAlert(formAlert, 'Protokol keamanan pangan wajib diisi.', 'danger');
+        return;
+      }
+
+      // Disable submit
+      const submitBtn = addForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Memproses...';
 
       try {
         const response = await fetch('/api/donations', {
@@ -233,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          showAlert(formAlert, 'Permintaan donasi pangan berhasil diterbitkan!', 'success');
+          showAlert(formAlert, '✅ Permintaan donasi pangan berhasil diterbitkan!', 'success');
           addForm.reset();
           fetchRequests();
         } else {
@@ -242,6 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error(err);
         showAlert(formAlert, 'Gagal terhubung ke server backend.', 'danger');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Ajukan Permintaan →';
       }
     });
   }
@@ -255,12 +342,38 @@ document.addEventListener('DOMContentLoaded', () => {
       const volunteerName = document.getElementById('vol-name').value.trim();
       const volunteerPhone = document.getElementById('vol-phone').value.trim();
 
+      showAlert(volunteerAlert, '', 'none');
+
       if (!programId) {
-        showAlert(volunteerAlert, 'Pilihlah salah satu program logistik donasi di samping.', 'danger');
+        showAlert(volunteerAlert, 'Pilih salah satu program logistik donasi yang tersedia.', 'danger');
         return;
       }
 
-      showAlert(volunteerAlert, '', 'none');
+      if (!volunteerName) {
+        showAlert(volunteerAlert, 'Nama lengkap wajib diisi.', 'danger');
+        return;
+      }
+
+      if (volunteerName.length < 2) {
+        showAlert(volunteerAlert, 'Nama minimal 2 karakter.', 'danger');
+        return;
+      }
+
+      if (!volunteerPhone) {
+        showAlert(volunteerAlert, 'Nomor WhatsApp wajib diisi.', 'danger');
+        return;
+      }
+
+      // Validate Indonesian phone format
+      const cleanPhone = volunteerPhone.replace(/[\s\-]/g, '');
+      if (!/^(\+62|62|0)8[0-9]{8,11}$/.test(cleanPhone)) {
+        showAlert(volunteerAlert, 'Format nomor WhatsApp tidak valid. Gunakan format: 08XXXXXXXXXX atau +628XXXXXXXXXX', 'danger');
+        return;
+      }
+
+      const submitBtn = volunteerForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Mendaftarkan...';
 
       try {
         const response = await fetch(`/api/donations/${programId}/volunteer`, {
@@ -272,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          showAlert(volunteerAlert, 'Terima kasih, Anda terdaftar sebagai Kurir Relawan! Kami akan segera menghubungi Anda.', 'success');
+          showAlert(volunteerAlert, '✅ Terima kasih, Anda terdaftar sebagai Kurir Relawan! Kami akan segera menghubungi Anda melalui WhatsApp.', 'success');
           volunteerForm.reset();
         } else {
           showAlert(volunteerAlert, data.message || 'Pendaftaran kurir gagal.', 'danger');
@@ -280,6 +393,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error(err);
         showAlert(volunteerAlert, 'Gagal terhubung ke server backend.', 'danger');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Daftar Jadi Kurir Pengantar →';
       }
     });
   }
@@ -294,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     alertEl.style.display = 'block';
     alertEl.textContent = msg;
     alertEl.className = `alert alert-${type}`;
+    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   // Initial load

@@ -43,10 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error('Gagal memuat makanan');
       const data = await response.json();
 
-      // In a real database we filter by partner ID:
-      // const partnerListings = data.filter(food => food.restaurantId === currentPartner.id);
-      // For the demo we show all foods that belong to 'Bakery Aroma Indah' (ID 1) OR show all if none
-      const partnerListings = data.filter(food => food.restaurantId === currentPartner.id || food.restaurantName === currentPartner.name);
+      // Filter foods that belong to the logged-in partner
+      const partnerListings = data.filter(food =>
+        food.restaurantId === currentPartner.id || food.restaurantName === currentPartner.name
+      );
 
       renderTable(partnerListings);
     } catch (err) {
@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
         if (confirm('Apakah Anda yakin ingin menghapus surplus makanan ini?')) {
+          btn.disabled = true;
           try {
             const response = await fetch(`/api/foods/${id}`, { method: 'DELETE' });
             const data = await response.json();
@@ -128,14 +129,16 @@ document.addEventListener('DOMContentLoaded', () => {
               // Remove row from UI
               const row = document.getElementById(`food-row-${id}`);
               if (row) row.remove();
-              // Reload table just in case
+              // Reload table to refresh count
               loadListings();
             } else {
               alert(data.message || 'Gagal menghapus makanan');
+              btn.disabled = false;
             }
           } catch (err) {
             console.error(err);
             alert('Koneksi terputus ke backend server');
+            btn.disabled = false;
           }
         }
       });
@@ -149,13 +152,82 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const title = document.getElementById('food-title').value.trim();
       const category = document.getElementById('food-category').value;
-      const quantity = document.getElementById('food-qty').value;
-      const originalPrice = document.getElementById('food-original-price').value || Number(document.getElementById('food-price').value) * 2;
-      const price = document.getElementById('food-price').value;
-      const expiryTime = document.getElementById('food-expiry').value.trim();
+      const quantityRaw = document.getElementById('food-qty').value;
+      const originalPriceRaw = document.getElementById('food-original-price').value;
+      const priceRaw = document.getElementById('food-price').value;
+      const expiryTimeRaw = document.getElementById('food-expiry').value;
       const description = document.getElementById('food-desc').value.trim();
 
+      // Convert datetime-local to readable Indonesian format
+      let expiryTime = expiryTimeRaw;
+      if (expiryTimeRaw) {
+        const expiryDate = new Date(expiryTimeRaw);
+        expiryTime = expiryDate.toLocaleString('id-ID', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+        });
+      }
+
       showFormAlert('', 'none');
+
+      // ============================================================
+      // CLIENT-SIDE VALIDATION
+      // ============================================================
+      if (!title) {
+        showFormAlert('Nama makanan wajib diisi.', 'danger');
+        return;
+      }
+
+      if (title.length < 3) {
+        showFormAlert('Nama makanan minimal 3 karakter.', 'danger');
+        return;
+      }
+
+      const quantity = Number(quantityRaw);
+      if (!quantityRaw || isNaN(quantity) || quantity <= 0 || !Number.isInteger(quantity)) {
+        showFormAlert('Jumlah porsi harus berupa bilangan bulat positif (misal: 5).', 'danger');
+        return;
+      }
+
+      if (quantity > 1000) {
+        showFormAlert('Jumlah porsi tidak boleh lebih dari 1000.', 'danger');
+        return;
+      }
+
+      const price = Number(priceRaw);
+      if (!priceRaw || isNaN(price) || price <= 0) {
+        showFormAlert('Harga diskon harus berupa angka positif.', 'danger');
+        return;
+      }
+
+      // Compute original price: use input if provided, otherwise auto 2x
+      const originalPrice = originalPriceRaw ? Number(originalPriceRaw) : price * 2;
+      if (isNaN(originalPrice) || originalPrice <= 0) {
+        showFormAlert('Harga asli harus berupa angka positif.', 'danger');
+        return;
+      }
+
+      if (price >= originalPrice) {
+        showFormAlert('Harga diskon harus lebih rendah dari harga asli. Ini adalah syarat listing surplus makanan.', 'danger');
+        return;
+      }
+
+      if (!expiryTimeRaw) {
+        showFormAlert('Batas waktu pengambilan wajib diisi.', 'danger');
+        return;
+      }
+
+      // Ensure the expiry time is in the future
+      const expiryDate = new Date(expiryTimeRaw);
+      if (expiryDate <= new Date()) {
+        showFormAlert('Batas waktu pengambilan harus di masa mendatang.', 'danger');
+        return;
+      }
+
+      // Disable submit button
+      const submitBtn = addForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Memproses...';
 
       try {
         const payload = {
@@ -179,16 +251,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          showFormAlert('Makanan surplus berhasil dipasang dan live di Marketplace!', 'success');
+          showFormAlert('✅ Makanan surplus berhasil dipasang dan live di Marketplace!', 'success');
           addForm.reset();
           loadListings();
-          // Also update core infra logs (if landing page impact data is updated, this will align)
         } else {
           showFormAlert(data.message || 'Gagal menambahkan makanan surplus', 'danger');
         }
       } catch (err) {
         console.error(err);
-        showFormAlert('Koneksi ke backend server gagal', 'danger');
+        showFormAlert('Koneksi ke backend server gagal. Pastikan server aktif.', 'danger');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Pasang Makanan →';
       }
     });
   }
@@ -203,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formAlert.style.display = 'block';
     formAlert.textContent = msg;
     formAlert.className = `alert alert-${type}`;
+    formAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   // Initial load

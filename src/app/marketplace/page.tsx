@@ -107,7 +107,7 @@ export default function MarketplacePage() {
 
   const handleOpenClaim = (food: FoodItem) => {
     setActiveClaimItem(food);
-    setClaimQty(1);
+    setClaimQty(food.quantity > 0 ? 1 : 0);
     setClaimSuccessCode(null);
   };
 
@@ -254,8 +254,9 @@ export default function MarketplacePage() {
                   <Button
                     onClick={() => handleOpenClaim(food)}
                     className="w-full mt-2"
+                    disabled={food.quantity === 0}
                   >
-                    Klaim Porsi
+                    {food.quantity === 0 ? "Stok Habis" : "Klaim Porsi"}
                   </Button>
                 </CardContent>
               </Card>
@@ -298,8 +299,9 @@ export default function MarketplacePage() {
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Porsi Pengambilan</label>
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => setClaimQty(Math.max(1, claimQty - 1))}
+                        onClick={() => setClaimQty(Math.max(activeClaimItem.quantity > 0 ? 1 : 0, claimQty - 1))}
                         className="w-9 h-9 border border-slate-200 dark:border-slate-800 rounded-lg flex items-center justify-center font-bold"
+                        disabled={activeClaimItem.quantity === 0}
                       >
                         -
                       </button>
@@ -307,6 +309,7 @@ export default function MarketplacePage() {
                       <button
                         onClick={() => setClaimQty(Math.min(activeClaimItem.quantity, claimQty + 1))}
                         className="w-9 h-9 border border-slate-200 dark:border-slate-800 rounded-lg flex items-center justify-center font-bold"
+                        disabled={activeClaimItem.quantity === 0}
                       >
                         +
                       </button>
@@ -322,6 +325,7 @@ export default function MarketplacePage() {
                   <Button
                     onClick={handleConfirmClaim}
                     className="w-full flex items-center justify-center gap-1.5"
+                    disabled={activeClaimItem.quantity === 0 || claimQty === 0}
                   >
                     <CheckCircle className="w-4 h-4" /> Konfirmasi Pengambilan
                   </Button>

@@ -43,10 +43,17 @@ export default function DonorPage() {
   const [formDesc, setFormDesc] = useState("");
   const [formTarget, setFormTarget] = useState("");
   const [successMsg, setSuccessMsg] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleCreateRequest = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
     if (!formName || !formTitle || !formTarget) return;
+
+    if (Number(formTarget) <= 0) {
+      setErrorMsg("Target porsi harus lebih dari 0.");
+      return;
+    }
 
     const newRequest: MockDonationRequest = {
       id: Math.random().toString(),
@@ -185,6 +192,7 @@ export default function DonorPage() {
                   <Input
                     type="number"
                     placeholder="cth. 50"
+                    min="1"
                     value={formTarget}
                     onChange={(e) => setFormTarget(e.target.value)}
                     required
@@ -201,6 +209,13 @@ export default function DonorPage() {
                     className="flex w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
                   />
                 </div>
+
+                {errorMsg && (
+                  <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-50 dark:bg-rose-950/20 text-rose-500 border border-rose-100 dark:border-rose-900/30">
+                    <ShieldCheck className="w-4 h-4 shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
 
                 {successMsg && (
                   <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-500 border border-emerald-100 dark:border-emerald-900/30">

@@ -38,6 +38,16 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Format email tidak valid.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Kata sandi minimal 8 karakter.");
+      return;
+    }
+
     try {
       setLoading(true);
       await register(name, email, role);

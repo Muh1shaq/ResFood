@@ -68,12 +68,14 @@
 
             <div class="form-group">
               <label for="req-target">Target Jumlah Porsi</label>
-              <input type="number" id="req-target" class="form-input" placeholder="cth. 50" min="1" required>
+              <input type="number" id="req-target" class="form-input" placeholder="cth. 50" min="1" max="10000" required>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Maks. 10.000 porsi</span>
             </div>
 
             <div class="form-group">
-              <label for="req-deadline">Batas Waktu Pengantaran</label>
-              <input type="text" id="req-deadline" class="form-input" placeholder="cth. Hari ini, 18:00 WIB" required>
+              <label for="req-deadline">Batas Waktu Pengantaran <span style="color:var(--danger)">*</span></label>
+              <input type="datetime-local" id="req-deadline" class="form-input" required>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Pilih tanggal & jam batas pengantaran</span>
             </div>
 
             <div class="form-group">
@@ -114,7 +116,8 @@
 
             <div class="form-group" style="margin-bottom: 1.5rem;">
               <label for="vol-phone">Nomor WhatsApp Aktif</label>
-              <input type="tel" id="vol-phone" class="form-input" placeholder="cth. 0812XXXXXXXX" required>
+              <input type="tel" id="vol-phone" class="form-input" placeholder="cth. 08123456789" pattern="^(\+62|62|0)8[0-9]{8,11}$" required>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Format: 08XXXXXXXXXX atau +628XXXXXXXXXX</span>
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem; font-weight:700;">Daftar Jadi Kurir Pengantar &rarr;</button>

@@ -28,14 +28,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ============================================================
+  // CLIENT-SIDE VALIDATION HELPERS
+  // ============================================================
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function isValidIndonesianPhone(phone) {
+    return /^(\+62|62|0)8[0-9]{8,11}$/.test(phone.replace(/[\s\-]/g, ''));
+  }
+
+  // ============================================================
   // Handle Login submission
+  // ============================================================
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+      // NOTE: Do NOT trim password — spaces in password are intentional
+      const password = document.getElementById('password').value;
 
       showAlert('', 'none'); // Clear alert
+
+      // Client-side validation
+      if (!email || !password) {
+        showAlert('Email dan kata sandi wajib diisi.', 'danger');
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        showAlert('Format email tidak valid. Contoh: nama@domain.com', 'danger');
+        return;
+      }
+
+      if (password.length < 8) {
+        showAlert('Kata sandi minimal 8 karakter.', 'danger');
+        return;
+      }
+
+      // Disable submit button to prevent double submit
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Memproses...';
 
       try {
         const response = await fetch('/api/auth/login', {
@@ -58,28 +93,74 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.user.role === 'nonprofit') {
               window.location.href = '/donor/';
             } else {
+              // public & courier
               window.location.href = '/marketplace/';
             }
           }, 1000);
         } else {
-          showAlert(data.message || 'Login gagal, silakan periksa email/password Anda', 'danger');
+          showAlert(data.message || 'Login gagal. Periksa email dan kata sandi Anda.', 'danger');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Masuk';
         }
       } catch (err) {
         console.error(err);
-        showAlert('Koneksi ke server gagal, pastikan backend aktif', 'danger');
+        showAlert('Koneksi ke server gagal. Pastikan backend aktif.', 'danger');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Masuk';
       }
     });
   }
 
+  // ============================================================
   // Handle Register submission
+  // ============================================================
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPasswordEl = document.getElementById('confirm-password');
+      const confirmPassword = confirmPasswordEl ? confirmPasswordEl.value : null;
 
       showAlert('', 'none'); // Clear alert
+
+      // Client-side validation
+      if (!name || !email || !password) {
+        showAlert('Semua kolom wajib diisi.', 'danger');
+        return;
+      }
+
+      if (name.length < 2) {
+        showAlert('Nama minimal 2 karakter.', 'danger');
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        showAlert('Format email tidak valid. Contoh: nama@domain.com', 'danger');
+        return;
+      }
+
+      if (password.length < 8) {
+        showAlert('Kata sandi minimal 8 karakter.', 'danger');
+        return;
+      }
+
+      if (password.length > 20) {
+        showAlert('Kata sandi maksimal 20 karakter.', 'danger');
+        return;
+      }
+
+      // Confirm password check
+      if (confirmPassword !== null && confirmPassword !== password) {
+        showAlert('Konfirmasi kata sandi tidak cocok. Periksa kembali.', 'danger');
+        return;
+      }
+
+      // Disable submit button
+      const submitBtn = registerForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Mendaftarkan...';
 
       try {
         const response = await fetch('/api/auth/register', {
@@ -91,16 +172,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
         
         if (response.ok && data.success) {
-          showAlert(data.message + '! Mengalihkan ke login...', 'success');
+          showAlert(data.message + '! Mengalihkan ke halaman masuk...', 'success');
           setTimeout(() => {
             window.location.href = '/auth/login.html';
           }, 1500);
         } else {
-          showAlert(data.message || 'Pendaftaran gagal', 'danger');
+          showAlert(data.message || 'Pendaftaran gagal. Coba lagi.', 'danger');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Daftar Akun';
         }
       } catch (err) {
         console.error(err);
-        showAlert('Koneksi ke server gagal, pastikan backend aktif', 'danger');
+        showAlert('Koneksi ke server gagal. Pastikan backend aktif.', 'danger');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Daftar Akun';
       }
     });
   }
@@ -116,5 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     alertEl.style.display = 'block';
     alertEl.textContent = msg;
     alertEl.className = `alert alert-${type}`;
+    // Scroll alert into view smoothly
+    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 });

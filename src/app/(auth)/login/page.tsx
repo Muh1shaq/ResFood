@@ -28,6 +28,11 @@ export default function LoginPage() {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Format email tidak valid.");
+      return;
+    }
+
     try {
       setLoading(true);
       await login(email, role);
