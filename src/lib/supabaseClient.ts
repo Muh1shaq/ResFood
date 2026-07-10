@@ -1,29 +1,15 @@
-// Supabase Client Boilerplate
-// In a real application, you would configure these variables in .env.local
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-url.supabase.co";
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-url.supabase.co";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
 
-export const supabase = {
-  auth: {
-    getUser: async () => ({ data: { user: null }, error: null }),
-    signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
-    signUp: async () => ({ data: { user: null, session: null }, error: null }),
-    signOut: async () => ({ error: null }),
-  },
-  from: (table: string) => ({
-    select: () => ({
-      eq: () => ({
-        single: async () => ({ data: null, error: null }),
-        maybeSingle: async () => ({ data: null, error: null }),
-      }),
-      order: () => ({
-        limit: async () => ({ data: [], error: null }),
-      }),
-    }),
-    insert: async () => ({ data: null, error: null }),
-    update: () => ({
-      eq: async () => ({ data: null, error: null }),
-    }),
-  }),
-};
+// Clean trailing '/rest/v1/' or '/rest/v1' from URL if present
+if (supabaseUrl) {
+  if (supabaseUrl.endsWith('/rest/v1/')) {
+    supabaseUrl = supabaseUrl.slice(0, -'/rest/v1/'.length);
+  } else if (supabaseUrl.endsWith('/rest/v1')) {
+    supabaseUrl = supabaseUrl.slice(0, -'/rest/v1'.length);
+  }
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
