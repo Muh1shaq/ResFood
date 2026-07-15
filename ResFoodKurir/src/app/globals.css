@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #fcfcfc;
+  --foreground: #0f172a;
+  
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #f8fafc;
+  --secondary-foreground: #0f172a;
+  
+  --accent: #f59e0b;
+  --accent-foreground: #ffffff;
+  
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --card-border: #e2e8f0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  
+  --font-sans: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #f8fafc;
+  
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  
+  --accent: #f59e0b;
+  --accent-foreground: #0f172a;
+  
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  
+  --card: #09090b;
+  --card-foreground: #f8fafc;
+  --card-border: #1e293b;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+}
+
+/* Custom Minimalist Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass {
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+}
