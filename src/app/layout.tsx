@@ -2,6 +2,7 @@ import React from "react";
 import "./globals.css";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import { ThemeProvider } from "@/components/shared/ThemeProvider";
 
 export const metadata = {
   title: "ResFood - Selamatkan Makanan Surplus & Berbagi Sesama",
@@ -14,22 +15,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <body className="gradient-bg min-h-screen flex flex-col relative text-slate-900 dark:text-slate-100 transition-colors duration-300">
-        {/* Ambient background glows */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none -z-10" />
-        <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none -z-10" />
-        
-        {/* Navigation Bar */}
-        <Navbar />
-        
-        {/* Main Content Area */}
-        <main className="flex-grow pt-24 pb-12 px-4 md:px-8 max-w-7xl mx-auto w-full">
-          {children}
-        </main>
-        
-        {/* Footer */}
-        <Footer />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {/* Ambient background glows */}
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+          <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+          
+          {/* Navigation Bar */}
+          <Navbar />
+          
+          {/* Main Content Area */}
+          <main className="flex-grow pt-24 pb-12 px-4 md:px-8 max-w-7xl mx-auto w-full">
+            {children}
+          </main>
+          
+          {/* Footer */}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

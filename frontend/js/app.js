@@ -68,8 +68,8 @@ function enforceRoleAccess() {
   const role = user.role;
   const home = ROLE_HOME[role] || '/';
 
-  // Logged-in users cannot visit the landing page or auth pages
-  if (isLanding || isAuthPage) {
+  // Logged-in users cannot visit auth pages
+  if (isAuthPage) {
     window.location.href = home;
     return;
   }
