@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Search, Map as MapIcon, List, Eye, ShieldCheck, Heart, Sparkles, X, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import FoodMap from "@/components/maps/FoodMap";
@@ -86,9 +88,13 @@ const MOCK_FOODS: FoodItem[] = [
 ];
 
 export default function MarketplacePage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("semua");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
   // Claim states
   const [activeClaimItem, setActiveClaimItem] = useState<FoodItem | null>(null);
@@ -106,6 +112,10 @@ export default function MarketplacePage() {
   });
 
   const handleOpenClaim = (food: FoodItem) => {
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
     setActiveClaimItem(food);
     setClaimQty(food.quantity > 0 ? 1 : 0);
     setClaimSuccessCode(null);
@@ -357,6 +367,46 @@ export default function MarketplacePage() {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Login Prompt Dialog */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <Card className="max-w-md w-full border-slate-200 dark:border-slate-800 text-center">
+            <CardHeader className="relative pb-2">
+              <button
+                onClick={() => setShowLoginPrompt(false)}
+                className="absolute right-4 top-4 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-2">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <CardTitle className="text-xl">Login Diperlukan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Anda harus masuk (login) terlebih dahulu untuk dapat mengklaim porsi makanan.
+              </p>
+              <div className="flex gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowLoginPrompt(false)}
+                >
+                  Batal
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => router.push("/login")}
+                >
+                  Masuk Sekarang
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
