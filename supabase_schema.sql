@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
   password TEXT NOT NULL,
   name TEXT NOT NULL,
   role TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT FALSE,
+  current_lat NUMERIC,
+  current_lng NUMERIC,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -56,6 +59,14 @@ CREATE TABLE IF NOT EXISTS claims (
   quantity INTEGER NOT NULL,
   claim_code TEXT NOT NULL,
   price_paid NUMERIC NOT NULL,
+  status TEXT DEFAULT 'pending',
+  driver_id TEXT,
+  pickup_pin TEXT,
+  delivery_pin TEXT,
+  delivery_lat NUMERIC,
+  delivery_lng NUMERIC,
+  delivery_address TEXT,
+  delivery_fee NUMERIC DEFAULT 0,
   claimed_at TIMESTAMPTZ DEFAULT NOW()
 );
 

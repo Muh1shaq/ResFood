@@ -37,11 +37,15 @@ const authRoutes      = require('./routes/auth');
 const foodRoutes      = require('./routes/foods');
 const donationRoutes  = require('./routes/donations');
 const impactRoutes    = require('./routes/impact');
+const ordersRoutes    = require('./routes/orders');
+const driverRoutes    = require('./routes/driver');
 
 app.use('/api/auth',      authRoutes);
 app.use('/api/foods',     foodRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/impact',    impactRoutes);
+app.use('/api/orders',    ordersRoutes);
+app.use('/api/driver',    driverRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

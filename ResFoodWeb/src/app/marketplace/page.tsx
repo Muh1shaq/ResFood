@@ -11,6 +11,23 @@ import FoodMap from "@/components/maps/FoodMap";
 import { FoodItem } from "@/types";
 import { formatRupiah } from "@/lib/utils";
 
+// Helper Haversine Distance
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRadian = (angle: number) => (Math.PI / 180) * angle;
+  const distance = (a: number, b: number) => (Math.PI / 180) * (a - b);
+  const RADIUS_OF_EARTH_IN_KM = 6371;
+
+  const dLat = distance(lat2, lat1);
+  const dLon = distance(lon2, lon1);
+
+  lat1 = toRadian(lat1);
+  lat2 = toRadian(lat2);
+
+  const a = Math.pow(Math.sin(dLat / 2), 2) + Math.pow(Math.sin(dLon / 2), 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.asin(Math.sqrt(a));
+  return RADIUS_OF_EARTH_IN_KM * c;
+}
+
 // Mock surplus foods database
 const MOCK_FOODS: FoodItem[] = [
   {
@@ -100,6 +117,14 @@ export default function MarketplacePage() {
   const [activeClaimItem, setActiveClaimItem] = useState<FoodItem | null>(null);
   const [claimQty, setClaimQty] = useState(1);
   const [claimSuccessCode, setClaimSuccessCode] = useState<string | null>(null);
+  const [deliveryPin, setDeliveryPin] = useState<string | null>(null);
+
+  // Delivery states
+  const [userLoc, setUserLoc] = useState<{lat: number, lng: number} | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [deliveryFee, setDeliveryFee] = useState<number>(0);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const categories = ["semua", "makanan berat", "roti & kue", "buah & sayur", "minuman"];
 
@@ -119,12 +144,50 @@ export default function MarketplacePage() {
     setActiveClaimItem(food);
     setClaimQty(food.quantity > 0 ? 1 : 0);
     setClaimSuccessCode(null);
+    setDeliveryPin(null);
+    setDistanceKm(null);
+    setDeliveryFee(0);
+    setLocationError(null);
+
+    // Get location for distance validation
+    if ("geolocation" in navigator) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setUserLoc({ lat, lng });
+          setIsLocating(false);
+          
+          if (food.latitude && food.longitude) {
+            const dist = calculateDistance(lat, lng, food.latitude, food.longitude);
+            setDistanceKm(dist);
+            if (dist > 10) {
+              setLocationError(`Jarak terlalu jauh (${dist.toFixed(1)} km). Maksimal pengiriman 10 km.`);
+            } else {
+              setDeliveryFee(Math.ceil(dist) * 2000); // Rp 2000 per km
+            }
+          }
+        },
+        (err) => {
+          setIsLocating(false);
+          setLocationError("Gagal mendapatkan lokasi. Harap izinkan akses lokasi untuk pengiriman.");
+        }
+      );
+    } else {
+      setLocationError("Browser Anda tidak mendukung geolokasi.");
+    }
   };
 
-  const handleConfirmClaim = () => {
+  const handleConfirmClaim = async () => {
     if (!activeClaimItem) return;
-    const generatedCode = `RES-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // In a real app, this would call POST /api/orders/checkout
+    const generatedCode = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const genDeliveryPin = Math.floor(100000 + Math.random() * 900000).toString();
+    
     setClaimSuccessCode(generatedCode);
+    setDeliveryPin(genDeliveryPin);
   };
 
   return (
@@ -328,16 +391,29 @@ export default function MarketplacePage() {
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-sm font-semibold">
-                    <span>Total Pembayaran</span>
-                    <span className="text-emerald-500 font-extrabold text-lg">{formatRupiah(activeClaimItem.discountPrice * claimQty)}</span>
+                    <span>Harga Makanan</span>
+                    <span>{formatRupiah(activeClaimItem.discountPrice * claimQty)}</span>
                   </div>
+
+                  <div className="flex justify-between items-center text-sm font-semibold">
+                    <span>Ongkos Kirim {distanceKm ? `(${distanceKm.toFixed(1)} km)` : ""}</span>
+                    <span>{formatRupiah(deliveryFee)}</span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-sm font-semibold">
+                    <span>Total Pembayaran</span>
+                    <span className="text-emerald-500 font-extrabold text-lg">{formatRupiah((activeClaimItem.discountPrice * claimQty) + deliveryFee)}</span>
+                  </div>
+
+                  {isLocating && <p className="text-xs text-amber-500 text-center animate-pulse">Sedang mencari lokasi Anda & menghitung jarak...</p>}
+                  {locationError && <p className="text-xs text-red-500 text-center font-semibold">{locationError}</p>}
 
                   <Button
                     onClick={handleConfirmClaim}
                     className="w-full flex items-center justify-center gap-1.5"
-                    disabled={activeClaimItem.quantity === 0 || claimQty === 0}
+                    disabled={activeClaimItem.quantity === 0 || claimQty === 0 || isLocating || !!locationError}
                   >
-                    <CheckCircle className="w-4 h-4" /> Konfirmasi Pengambilan
+                    <CheckCircle className="w-4 h-4" /> Konfirmasi Pesanan & Kurir
                   </Button>
                 </>
               ) : (
@@ -346,16 +422,20 @@ export default function MarketplacePage() {
                     <CheckCircle className="w-8 h-8" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-bold">Klaim Berhasil Dibuat</h3>
-                    <p className="text-xs text-slate-500">Tunjukkan kode berikut ke kasir mitra saat mengambil makanan.</p>
+                    <h3 className="text-lg font-bold">Pesanan Sedang Diproses</h3>
+                    <p className="text-xs text-slate-500">Sistem sedang menugaskan kurir terdekat. Berikan PIN ini kepada kurir saat pesanan tiba.</p>
                   </div>
                   <div className="p-4 bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 rounded-xl max-w-[200px] mx-auto">
-                    <span className="font-mono text-2xl font-extrabold tracking-wider text-emerald-600 dark:text-emerald-400">
-                      {claimSuccessCode}
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1">PIN PENYELESAIAN</p>
+                    <span className="font-mono text-3xl font-extrabold tracking-wider text-emerald-600 dark:text-emerald-400">
+                      {deliveryPin}
                     </span>
                   </div>
                   <div className="text-left text-xs bg-slate-50 dark:bg-slate-900 p-3 rounded-lg space-y-1 border border-slate-100 dark:border-slate-800">
-                    <p>📍 <strong>Alamat:</strong> {activeClaimItem.restaurantName}, Jakarta Selatan</p>
+                    <p>📍 <strong>ID Pesanan:</strong> {claimSuccessCode}</p>
+                    <p>🛵 <strong>Status:</strong> Mencari Kurir Terdekat...</p>
+                    <p>💰 <strong>Total Pembayaran:</strong> {formatRupiah((activeClaimItem.discountPrice * claimQty) + deliveryFee)}</p>
+                    <p>📍 <strong>Alamat Resto:</strong> {activeClaimItem.restaurantName}, Jakarta Selatan</p>
                     <p>🕒 <strong>Batas Pengambilan:</strong> {activeClaimItem.expiryTime}</p>
                   </div>
                   <Button
