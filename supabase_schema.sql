@@ -90,6 +90,25 @@ CREATE TABLE IF NOT EXISTS safety_audit_logs (
   type TEXT NOT NULL
 );
 
+-- Create merchant_validations table
+CREATE TABLE IF NOT EXISTS merchant_validations (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  phone_number TEXT,
+  phone_verified BOOLEAN DEFAULT FALSE,
+  email_verified BOOLEAN DEFAULT FALSE,
+  nik TEXT,
+  ktp_verified BOOLEAN DEFAULT FALSE,
+  bank_name TEXT,
+  bank_account_number TEXT,
+  bank_account_name TEXT,
+  bank_verified BOOLEAN DEFAULT FALSE,
+  outlet_address TEXT,
+  outlet_verified BOOLEAN DEFAULT FALSE,
+  verification_status TEXT DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Seed initial data for users
 INSERT INTO users (email, password, name, role) VALUES
 ('mitra@resfood.com', 'password123', 'Bakery Aroma Indah', 'restaurant'),
