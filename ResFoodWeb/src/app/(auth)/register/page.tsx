@@ -52,8 +52,10 @@ export default function RegisterPage() {
       setLoading(true);
       await register(name, email, role, password);
       setSuccess(true);
+      const redirectParam = searchParams.get("redirect");
+      const destination = redirectParam || (role === "restaurant" || role === "foodbank" ? "/dashboard" : "/marketplace");
       setTimeout(() => {
-        window.location.href = role === "restaurant" || role === "foodbank" ? "/dashboard" : "/marketplace";
+        window.location.href = destination;
       }, 1000);
     } catch (err: any) {
       setError(err?.message || "Gagal membuat akun.");
@@ -183,7 +185,7 @@ export default function RegisterPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Sudah memiliki akun?{" "}
             <Link
-              href="/login"
+              href={searchParams.get("redirect") ? `/login?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : "/login"}
               className="font-bold text-emerald-500 hover:text-emerald-600"
             >
               Masuk

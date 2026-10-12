@@ -1,12 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Leaf, MapPin, Landmark, HeartHandshake, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
+import AuthRequiredModal from "@/components/shared/AuthRequiredModal";
 
-export default function LandingPage() {
+function LandingContent() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("authModal") === "true") {
+      setIsAuthModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const handleExploreClick = () => {
+    if (user) {
+      router.push("/marketplace");
+    } else {
+      setIsAuthModalOpen(true);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       
@@ -27,11 +49,13 @@ export default function LandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-          <Link href="/marketplace" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-14 text-base font-medium shadow-sm hover:shadow-md transition-all">
-              Jelajahi Makanan <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            onClick={handleExploreClick}
+            className="w-full sm:w-auto rounded-full px-8 h-14 text-base font-medium shadow-sm hover:shadow-md transition-all"
+          >
+            Jelajahi Makanan <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
           <Link href="/register" className="w-full sm:w-auto">
             <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 h-14 text-base font-medium border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
               Daftar Sekarang
@@ -145,6 +169,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Auth Modal when not logged in */}
+      <AuthRequiredModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        redirectPath="/marketplace"
+      />
+
     </div>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <LandingContent />
+    </Suspense>
   );
 }

@@ -11,17 +11,38 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Sync state with localStorage on mount
+  // Sync state with localStorage and cookies on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
+      let activeUser: User | null = null;
       const stored = localStorage.getItem(AUTH_KEY);
       if (stored) {
         try {
-          setUser(JSON.parse(stored));
+          activeUser = JSON.parse(stored);
         } catch (e) {
           localStorage.removeItem(AUTH_KEY);
         }
       }
+
+      // If cookie exists but not in localStorage, sync from cookie
+      if (!activeUser && document.cookie) {
+        const match = document.cookie.match(new RegExp(`(^|;\\s*)${AUTH_KEY}=([^;]*)`));
+        if (match && match[2]) {
+          try {
+            activeUser = JSON.parse(decodeURIComponent(match[2]));
+            localStorage.setItem(AUTH_KEY, JSON.stringify(activeUser));
+          } catch (e) {
+            // invalid cookie
+          }
+        }
+      }
+
+      if (activeUser) {
+        // Ensure cookie is synced
+        document.cookie = `${AUTH_KEY}=${encodeURIComponent(JSON.stringify(activeUser))}; path=/; max-age=604800; SameSite=Lax`;
+        setUser(activeUser);
+      }
+
       setIsLoading(false);
     }
   }, []);
@@ -55,6 +76,7 @@ export function useAuth() {
       };
 
       localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
+      document.cookie = `${AUTH_KEY}=${encodeURIComponent(JSON.stringify(mockUser))}; path=/; max-age=604800; SameSite=Lax`;
       setUser(mockUser);
       setIsLoading(false);
       return mockUser;
@@ -99,6 +121,7 @@ export function useAuth() {
       };
 
       localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
+      document.cookie = `${AUTH_KEY}=${encodeURIComponent(JSON.stringify(mockUser))}; path=/; max-age=604800; SameSite=Lax`;
       setUser(mockUser);
       setIsLoading(false);
       return mockUser;
@@ -110,6 +133,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem(AUTH_KEY);
+    document.cookie = `${AUTH_KEY}=; path=/; max-age=0; SameSite=Lax`;
     setUser(null);
     if (typeof window !== "undefined") {
       window.location.href = "/";

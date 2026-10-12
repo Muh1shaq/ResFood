@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Mail, Lock, CheckCircle, ShieldAlert, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("customer");
@@ -37,8 +39,10 @@ export default function LoginPage() {
       setLoading(true);
       await login(email, role, password);
       setSuccess(true);
+      const redirectParam = searchParams.get("redirect");
+      const destination = redirectParam || (role === "restaurant" || role === "foodbank" ? "/dashboard" : "/marketplace");
       setTimeout(() => {
-        window.location.href = role === "restaurant" || role === "foodbank" ? "/dashboard" : "/marketplace";
+        window.location.href = destination;
       }, 1000);
     } catch (err: any) {
       setError(err?.message || "Terjadi kesalahan saat masuk.");
@@ -161,7 +165,7 @@ export default function LoginPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Belum punya akun?{" "}
             <Link
-              href="/register"
+              href={searchParams.get("redirect") ? `/register?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : "/register"}
               className="font-bold text-emerald-500 hover:text-emerald-600"
             >
               Daftar Gratis
