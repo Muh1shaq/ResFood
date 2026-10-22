@@ -138,3 +138,51 @@ INSERT INTO foods (restaurant_id, restaurant_name, title, description, original_
 INSERT INTO donations (name, title, description, target, current, deadline, status, safety_protocol) VALUES
 ('Panti Asuhan Kasih Bunda', 'Kebutuhan Roti & Susu Balita', 'Mencari surplus makanan dari bakery atau swalayan berupa roti tawar, kue basah, dan susu balita untuk santapan sore adik-adik panti.', 50, 32, 'Hari ini, 18:00 WIB', 'Berlangsung', 'Suhu Dingin & Kemasan Segel'),
 ('Dapur Umum Kelompok Relawan Ciliwung', 'Bahan Makanan Mentah (Sayuran & Protein)', 'Membutuhkan bahan mentah segar seperti sisa sortiran buah/sayur layak konsumsi dari swalayan atau perkebunan untuk diolah menjadi makanan siap saji warga terdampak banjir.', 100, 45, 'Besok, 10:00 WIB', 'Berlangsung', 'Uji Kualitas Bahan Mentah Layak Olah');
+
+-- ============================================================
+-- Fitur Pengaturan Jam Operasional Surplus & Notifikasi
+-- ============================================================
+
+-- 1. Tabel Jadwal Operasional Surplus Mitra
+CREATE TABLE IF NOT EXISTS merchant_schedules (
+  id SERIAL PRIMARY KEY,
+  merchant_id TEXT NOT NULL,                     -- Relasi ke users.id (role: restaurant)
+  session_name TEXT DEFAULT 'Sesi Surplus Utama',
+  open_time TIME NOT NULL,                       -- Contoh: '19:00:00'
+  close_time TIME NOT NULL,                      -- Contoh: '21:00:00'
+  active_days JSONB DEFAULT '["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]'::jsonb,
+  is_active BOOLEAN DEFAULT TRUE,
+  auto_notify BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT check_schedule_time CHECK (close_time > open_time)
+);
+
+CREATE INDEX IF NOT EXISTS idx_merchant_schedules_active 
+  ON merchant_schedules (merchant_id, is_active);
+
+-- Seed initial schedule untuk Bakery Aroma Indah (merchant_id: '1')
+INSERT INTO merchant_schedules (merchant_id, session_name, open_time, close_time, active_days, is_active, auto_notify)
+VALUES ('1', 'Sesi Malam Surplus', '19:00:00', '21:00:00', '["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]'::jsonb, TRUE, TRUE);
+
+-- 2. Tabel Notifikasi
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,                         -- Penerima (users.id)
+  role_target TEXT NOT NULL,                     -- 'mitra' | 'konsumen' | 'kurir'
+  merchant_id TEXT,                              -- Asal mitra (opsional)
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL,                            -- 'PREP_REMINDER' | 'SURPLUS_OPEN' | 'LAST_CALL'
+  is_read BOOLEAN DEFAULT FALSE,
+  session_key TEXT UNIQUE,                       -- Anti-spam / Idempotency Key
+  data JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user 
+  ON notifications (user_id, is_read, created_at DESC);
+
+-- Publikasikan tabel notifications untuk Supabase Realtime
+-- ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+

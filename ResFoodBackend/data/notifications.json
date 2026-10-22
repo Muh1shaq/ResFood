@@ -1,0 +1,103 @@
+[
+  {
+    "id": "20097341-86f4-484a-86ec-0e628d7d2f31",
+    "user_id": "4",
+    "role_target": "kurir",
+    "merchant_id": "1",
+    "title": "Mitra Buka Sesi Surplus: Bakery Aroma Indah",
+    "message": "Mitra Bakery Aroma Indah telah membuka sesi surplus. Aktifkan status online di ResFoodKurir untuk bersiap menerima order pengantaran!",
+    "type": "SURPLUS_OPEN",
+    "is_read": false,
+    "session_key": "1_2026-10-17_19:00:00_SURPLUS_OPEN_4",
+    "data": {
+      "merchantId": "1",
+      "merchantName": "Bakery Aroma Indah",
+      "url": "/dashboard"
+    },
+    "created_at": "2026-10-17T12:00:04.041Z"
+  },
+  {
+    "id": "524b8323-09ec-4fe5-ac85-25be657d92d6",
+    "user_id": "5",
+    "role_target": "konsumen",
+    "merchant_id": "1",
+    "title": "Surplus Dibuka: Bakery Aroma Indah",
+    "message": "Sesi surplus di Bakery Aroma Indah resmi dibuka (19:00 - 21:00 WIB)! Dapatkan makanan lezat diskon hingga 70%.",
+    "type": "SURPLUS_OPEN",
+    "is_read": false,
+    "session_key": "1_2026-10-17_19:00:00_SURPLUS_OPEN_5",
+    "data": {
+      "merchantId": "1",
+      "merchantName": "Bakery Aroma Indah",
+      "totalItems": 4,
+      "url": "/marketplace"
+    },
+    "created_at": "2026-10-17T12:00:03.781Z"
+  },
+  {
+    "id": "e82e5325-18c1-445e-8f73-03044f4af6ea",
+    "user_id": "3",
+    "role_target": "konsumen",
+    "merchant_id": "1",
+    "title": "Surplus Dibuka: Bakery Aroma Indah",
+    "message": "Sesi surplus di Bakery Aroma Indah resmi dibuka (19:00 - 21:00 WIB)! Dapatkan makanan lezat diskon hingga 70%.",
+    "type": "SURPLUS_OPEN",
+    "is_read": false,
+    "session_key": "1_2026-10-17_19:00:00_SURPLUS_OPEN_3",
+    "data": {
+      "merchantId": "1",
+      "merchantName": "Bakery Aroma Indah",
+      "totalItems": 4,
+      "url": "/marketplace"
+    },
+    "created_at": "2026-10-17T12:00:03.473Z"
+  },
+  {
+    "id": "19dbb74d-9cc0-4aca-83ce-ee2459f90be4",
+    "user_id": "1",
+    "role_target": "mitra",
+    "merchant_id": "1",
+    "title": "Pengingat Sesi Surplus: 15 Menit Lagi",
+    "message": "Halo Bakery Aroma Indah, jam operasional surplus [Sesi Malam Surplus] akan dimulai pada pukul 19:00 WIB. Pastikan stok makanan surplus diunggah dan checklist higienitas diverifikasi.",
+    "type": "PREP_REMINDER",
+    "is_read": false,
+    "session_key": "1_2026-10-17_19:00:00_PREP_REMINDER_1",
+    "data": {
+      "scheduleId": 1,
+      "openTime": "19:00:00",
+      "closeTime": "21:00:00",
+      "url": "/dashboard"
+    },
+    "created_at": "2026-10-17T11:45:03.488Z"
+  },
+  {
+    "id": "97937f73-4d7a-40d2-a1c2-307c5143aaad",
+    "user_id": "4",
+    "role_target": "kurir",
+    "merchant_id": "1",
+    "title": "Mitra Membuka Sesi Surplus: Bakery Aroma Indah",
+    "message": "Mitra Bakery Aroma Indah di area Anda telah membuka sesi surplus. Aktifkan status online untuk menerima order pengantaran!",
+    "type": "SURPLUS_OPEN",
+    "is_read": false,
+    "session_key": null,
+    "data": {
+      "url": "/dashboard"
+    },
+    "created_at": "2026-10-17T07:32:58.590Z"
+  },
+  {
+    "id": "9fb4a44c-511d-496d-8807-2dff7ca4deee",
+    "user_id": "3",
+    "role_target": "konsumen",
+    "merchant_id": "1",
+    "title": "Surplus Pangan Dibuka: Bakery Aroma Indah",
+    "message": "Sesi surplus di Bakery Aroma Indah resmi dibuka (19:00 - 21:00 WIB) dengan diskon hingga 70%! Segera klaim sebelum kehabisan.",
+    "type": "SURPLUS_OPEN",
+    "is_read": false,
+    "session_key": null,
+    "data": {
+      "url": "/marketplace"
+    },
+    "created_at": "2026-10-17T07:32:58.344Z"
+  }
+]

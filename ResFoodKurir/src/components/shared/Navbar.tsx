@@ -6,6 +6,8 @@ import { Leaf, Bell, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
+import CourierNotificationBell from "./CourierNotificationBell";
+
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
 
@@ -31,11 +33,10 @@ export default function Navbar() {
               <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Online</span>
             </div>
             
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-            </Button>
+            {/* Courier Notification Bell */}
+            <CourierNotificationBell />
             
-            <Button variant="ghost" size="icon" className="rounded-full bg-slate-100 dark:bg-slate-800">
+            <Button variant="ghost" size="sm" className="rounded-full w-9 h-9 p-0 bg-slate-100 dark:bg-slate-800">
               <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
             </Button>
           </div>

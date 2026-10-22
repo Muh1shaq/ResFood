@@ -105,7 +105,13 @@ export default function FoodMap({ items, onSelect }: FoodMapProps) {
         {selectedPin && (
           <div className="pointer-events-auto glass-card max-w-sm w-full p-4 rounded-xl border border-slate-200/60 dark:border-slate-800/80 shadow-lg flex items-center justify-between gap-4 animate-slide-up">
             <div className="space-y-1">
-              <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">{selectedPin.category}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">{selectedPin.category}</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Buka: 19:00 - 21:00 WIB
+                </span>
+              </div>
               <h4 className="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-1">{selectedPin.title}</h4>
               <p className="text-xs text-slate-400 font-medium">{selectedPin.restaurantName}</p>
               <div className="flex items-center gap-2 pt-1">

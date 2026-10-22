@@ -40,14 +40,22 @@ const impactRoutes    = require('./routes/impact');
 const ordersRoutes    = require('./routes/orders');
 const driverRoutes    = require('./routes/driver');
 const merchantRoutes  = require('./routes/merchant');
+const scheduleRoutes  = require('./routes/schedules');
+const notificationRoutes = require('./routes/notifications');
+const { startScheduler } = require('./utils/notificationScheduler');
 
-app.use('/api/auth',      authRoutes);
-app.use('/api/foods',     foodRoutes);
-app.use('/api/donations', donationRoutes);
-app.use('/api/impact',    impactRoutes);
-app.use('/api/orders',    ordersRoutes);
-app.use('/api/driver',    driverRoutes);
-app.use('/api/merchant',  merchantRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/foods',         foodRoutes);
+app.use('/api/donations',     donationRoutes);
+app.use('/api/impact',        impactRoutes);
+app.use('/api/orders',        ordersRoutes);
+app.use('/api/driver',        driverRoutes);
+app.use('/api/merchant',      merchantRoutes);
+app.use('/api/merchants',     scheduleRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// Start Background Notification Scheduler (every 60s)
+startScheduler();
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -65,3 +65,31 @@ export interface FoodTransaction {
   pickupCode: string;
   createdAt: string;
 }
+
+export interface MerchantSchedule {
+  id?: number;
+  merchant_id: string;
+  session_name: string;
+  open_time: string;
+  close_time: string;
+  active_days: string[];
+  is_active: boolean;
+  auto_notify: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  user_id: string;
+  role_target: "mitra" | "konsumen" | "kurir";
+  merchant_id?: string;
+  title: string;
+  message: string;
+  type: "PREP_REMINDER" | "SURPLUS_OPEN" | "LAST_CALL" | string;
+  is_read: boolean;
+  session_key?: string;
+  data?: Record<string, any>;
+  created_at: string;
+}
+

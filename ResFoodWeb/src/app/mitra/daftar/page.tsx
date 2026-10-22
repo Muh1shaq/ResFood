@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, Building, ShieldCheck, MapPin, CreditCard, ChevronRight } from "lucide-react";
+import { CheckCircle, Building, ShieldCheck, MapPin, CreditCard, ChevronRight, Smartphone } from "lucide-react";
 
 export default function MitraDaftarPage() {
   const router = useRouter();

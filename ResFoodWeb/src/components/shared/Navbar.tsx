@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, Leaf, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "next-themes";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -120,8 +121,11 @@ export default function Navbar() {
           </div>
 
           {/* Right-side actions */}
-          <div className="flex items-center gap-2 md:gap-4 shrink-0">
-            {/* Theme Toggle (Di luar hamburger di mobile) */}
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            {/* Lonceng Notifikasi Realtime */}
+            {user && <NotificationBell />}
+
+            {/* Theme Toggle */}
             {mounted ? (
               <button
                 onClick={toggleTheme}
@@ -131,11 +135,11 @@ export default function Navbar() {
                 {resolvedTheme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
             ) : (
-              <div className="w-10 h-10" /> // Placeholder to prevent layout shift
+              <div className="w-10 h-10" />
             )}
 
             {user ? (
-              <div className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
+              <div className="hidden md:flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
                 <div className="text-right">
                   <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                     {user.name}

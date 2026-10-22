@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Package, Clock, Navigation, CheckCircle, Smartphone } from "lucide-react";
+import { MapPin, Package, Clock, Navigation, CheckCircle, Smartphone, Sparkles } from "lucide-react";
 
 export default function DashboardPage() {
   const [isActive, setIsActive] = useState(false);
@@ -63,8 +63,64 @@ export default function DashboardPage() {
       setValidationError("PIN harus 6 digit angka");
     }
   };
+
+  // Real-time Surplus Open Alert
+  const [surplusAlert, setSurplusAlert] = useState<{ title: string; message: string } | null>(null);
+
+  useEffect(() => {
+    // Fetch latest notifications to check if any recent surplus open
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/notifications?user_id=4`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const latest = res.data[0];
+          if (latest.type === "SURPLUS_OPEN" && !latest.is_read) {
+            setSurplusAlert({ title: latest.title, message: latest.message });
+          }
+        }
+      })
+      .catch((e) => console.warn("Notice loading courier alert:", e));
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Alert Banner: Mitra Membuka Sesi Surplus */}
+      {surplusAlert && !isActive && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/15 to-emerald-500/5 border border-emerald-500/30 dark:border-emerald-500/20 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
+              <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: "3s" }} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                {surplusAlert.title}
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                {surplusAlert.message}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <Button
+              size="sm"
+              onClick={() => {
+                setIsActive(true);
+                setSurplusAlert(null);
+              }}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs rounded-xl shadow-sm"
+            >
+              Aktifkan Status Online
+            </Button>
+            <button
+              onClick={() => setSurplusAlert(null)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <CheckCircle className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard Kurir</h1>
